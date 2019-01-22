@@ -3,6 +3,7 @@ Redis
 ## 1. ziplist
 ### 1.1 整体结构
 ziplist是redis的基本数据结构,实际上是一个双向链表, redis的hash, list, set都基于ziplist实现,它的主要优点是省内存
+
 struct | zlbytes | zltail | zllen | entry | entry | ... | entry | zlend
 ------ | :-----: | :----: | :---: | :---: | :---: | :-: | :---: | :---:
 size   | uint32_t|uint32_t|uint16_t|      |       |     |       |uint8_t
