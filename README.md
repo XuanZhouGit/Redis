@@ -51,3 +51,13 @@ encoding字段很复杂:
 
 3. 5字节, |10000000|qqqqqqqq|rrrrrrrr|ssssssss|tttttttt| : 第一个字节为10000000, 后4字节为entry-data的长度len(< 2^32), entry-data为len字节的字符数组
 
+### 1.3 创建ziplist
+
+
+struct | zlbytes | zltail | zllen | zlend
+------ | :-----: | :----: | :---: | :---:
+size   |  4Bytes | 4Bytes | 2Bytes|1Byte
+value  | 1011    | 1010   | 0     |11111111
+
+### 1.4 插入元素
+
