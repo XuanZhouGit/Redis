@@ -1,5 +1,18 @@
 # Redis
-Redis
+Redis是一个开源的高性能key-value存储系统,有这些特点:
+
+1. 高性能:https://redis.io/topics/benchmarks
+
+2. 支持丰富的数据类型(string, hash, list, set, sorted set等)
+
+3. 所有操作都是原子性的,支持事务
+
+4. 可以通过AOF/RDB方式将内存数据保存到磁盘上保证持久存储
+
+5. 支持主从同步
+
+6. 支持publish/subscribe, notify等特性
+
 ## 1. ziplist
 ### 1.1 整体结构
 ziplist是redis的基本数据结构,实际上是一个双向链表, redis的hash, list, set都基于ziplist实现,它的主要优点是省内存
@@ -84,6 +97,11 @@ header | e1 | e2 | e3 | e4 | ... | zlend
 
 向后遍历: 比如指向e1的p开始,计算e1的长度(len1), (p+len1)即指向e2
 向前遍历: 比如指向e3的p开始,读取e3中的prev_entry_length(len2), (p-len2)即指向e2
+
+## 2 持久存储
+### 2.1 AOF(Append-only file)
+
+### 2.2 RDB
 
 
 
