@@ -59,7 +59,7 @@ struct | zlbytes | zltail | zllen | zlend
 size   |  4Bytes | 4Bytes | 2Bytes|1Byte
 value  | 1011    | 1010   | 0     |11111111
 
-### 1.4 插入元素
+### 1.4 插入元素(复杂度O(N) ~ O(N^2))
 
 struct | zlbytes | zltail | zllen | ... | prev | next | ... | zlend
 ------ | :-----: | :----: | :---: | :-: | :---:|:---: | :-: | :---:
@@ -70,6 +70,13 @@ value  | 1011    | 1010   |1000000| ... | ... |  prev_entry_length: 1001<br>... 
 
 struct | zlbytes | zltail | zllen | ... | prev | entry | next | ... | zlend
 ------ | :-----: | :----: | :---: | :-: | :---:|:-----:|:---: | :-: | :---:
-size   |  4Bytes | 4Bytes | 2Bytes| ... | 9Bytes| ... |  ... | ... |1Byte
+size   |  4Bytes | 4Bytes | 2Bytes| ... | 9Bytes|6Bytes|  ... | ... |1Byte
 value  | 1011    | 1010   |1000000| ... | ... | prev_entry_length: 1001<br> encoding: 00000100<br> entry-data: "test" | prev_entry_length: 1000<br>... | ...  | 11111111
 
+插入元素(entry)时,需要将entry之后的节点移位,所以一般情况时,插入entry需要O(N)复杂度,由于插入元素时需要更新next的prev_entry_length的值,如果prev_entry_length所占大小由1字节变成5字节,那么next的长度发生变化,引起next->next的prev_entry_length, 最坏情况可能变成O(N^2)的连锁更新
+### 1.5 删除元素(复杂度O(N) ~ O(N^2))
+删除操作可以看成插入操作的逆操作,与插入类似,可能引起连锁更新
+
+### 1.6 遍历
+
+struct | header | e1 | e2 | e3 | e4 | ... | zlend
