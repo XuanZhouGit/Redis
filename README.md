@@ -71,5 +71,5 @@ value  | 1011    | 1010   |1000000| ... | ... |  prev_entry_length: 1001... | ..
 struct | zlbytes | zltail | zllen | ... | prev | entry | next | ... | zlend
 ------ | :-----: | :----: | :---: | :-: | :---:|:-----:|:---: | :-: | :---:
 size   |  4Bytes | 4Bytes | 2Bytes| ... | 9Bytes| ... |  ... | ... |1Byte
-value  | 1011    | 1010   |1000000| ... | ... | prev_entry_length: 1001 encoding: 00000100 entry-data: "test" | prev_entry_length: 1001... | ...  | 11111111
+value  | 1011    | 1010   |1000000| ... | ... | prev_entry_length: 1001\n encoding: 00000100\n entry-data: "test" | prev_entry_length: 1000... | ...  | 11111111
 
