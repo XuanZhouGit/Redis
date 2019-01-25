@@ -104,11 +104,11 @@ Redis之所以性能好,读写速度快,是因为它的所有操作都基于内�
 AOF实际上是一份执行日志,所有redis修改相关的命令追加到AOF文件中,通过回放这些命令就能恢复数据库
 Redis现在支持3种刷新策略:
 
-1. AOF_FSYNC_NO :Write由主进程完成,不做fsync, 只有
+1. AOF_FSYNC_NO :Write由主进程完成,不做fsync,只在redis close的时候进行fsync,写性能高但可靠性低,可能丢失上次fsync之后的数据
 
-2.
+2. AOF_FSYNC_ALWAYS: Write和fsync都由主进程完成, 每次都进行阻塞write和fsync,写性能低但可靠性高,最多丢失一条数据
 
-3.
+3. AOF_FSYNC_EVERYSEC: Write在主进程完成,fsync在子进程非阻塞进行,2秒钟最多进行一次,最多丢失2秒的数据,写性能高且可靠性高
 
 ### 2.2 RDB
 
