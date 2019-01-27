@@ -284,4 +284,61 @@ rdb是将内存中的数据以快照的形式保存到文件中,重启redis时�
 
 ![Alt text](https://github.com/XuanZhouGit/Redis/blob/master/redis_rdb.PNG)
 
-save和bgsave实际上都是调用rdbSave来生成快照文件, 但是save操作是在主进程进行的,也就是save会阻塞主进程, 而
+save和bgsave实际上都是调用rdbSave来生成快照文件, 但是save操作是在主进程进行的,也就是save会阻塞主进程, 而bgSave是fork一个子进程,在子进程中进行rdbSave,并在save完成之后向主进程信号,通知主进程save完成,而主进程可以在rdbSave的时候继续处理用户请求
+```
+int rdbSaveBackground(char *filename, rdbSaveInfo *rsi) {
+    pid_t childpid;
+    long long start;
+
+    if (server.aof_child_pid != -1 || server.rdb_child_pid != -1) return C_ERR;
+
+    server.dirty_before_bgsave = server.dirty;
+    server.lastbgsave_try = time(NULL);
+    openChildInfoPipe();
+
+    start = ustime();
+    if ((childpid = fork()) == 0) {
+        int retval;
+
+        /* Child */
+        closeListeningSockets(0);
+        redisSetProcTitle("redis-rdb-bgsave");
+        retval = rdbSave(filename,rsi);
+        if (retval == C_OK) {
+            size_t private_dirty = zmalloc_get_private_dirty(-1);
+
+            if (private_dirty) {
+                serverLog(LL_NOTICE,
+                    "RDB: %zu MB of memory used by copy-on-write",
+                    private_dirty/(1024*1024));
+            }
+
+            server.child_info_data.cow_size = private_dirty;
+            sendChildInfo(CHILD_INFO_TYPE_RDB);
+        }
+        exitFromChild((retval == C_OK) ? 0 : 1);
+    } else {
+        /* Parent */
+        server.stat_fork_time = ustime()-start;
+        server.stat_fork_rate = (double) zmalloc_used_memory() * 1000000 / server.stat_fork_time / (1024*1024*1024); /* GB per second. */
+        latencyAddSampleIfNeeded("fork",server.stat_fork_time/1000);
+        if (childpid == -1) {
+            closeChildInfoPipe();
+            server.lastbgsave_status = C_ERR;
+            serverLog(LL_WARNING,"Can't save in background: fork: %s",
+                strerror(errno));
+            return C_ERR;
+        }
+        serverLog(LL_NOTICE,"Background saving started by pid %d",childpid);
+        server.rdb_save_time_start = time(NULL);
+        server.rdb_child_pid = childpid;
+        server.rdb_child_type = RDB_CHILD_TYPE_DISK;
+        updateDictResizePolicy();
+        return C_OK;
+    }
+    return C_OK; /* unreached */
+}
+```
+
+### 2.3 
+## 3 cluster
