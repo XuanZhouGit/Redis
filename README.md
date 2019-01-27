@@ -103,7 +103,7 @@ Redis之所以性能好,读写速度快,是因为它的所有操作都基于内�
 ### 2.1 AOF(Append-only file)
 AOF实际上是一份执行日志,所有redis修改相关的命令追加到AOF文件中,通过回放这些命令就能恢复数据库,更新AOF文件的流程如图:
 
-
+![Alt text](https://github.com/XuanZhouGit/Redis/blob/master/redis_aof.PNG)
 
 
 Redis现在支持3种刷新策略:
