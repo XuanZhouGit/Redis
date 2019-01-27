@@ -282,5 +282,6 @@ void flushAppendOnlyFile(int force) {
 
 rdb是将内存中的数据以快照的形式保存到文件中,重启redis时加载rdb文件就能恢复数据库, 用户通过save,bgsave或flushall(save)命令来生成快照文件,那么save跟bgsave有什么区别呢:
 
+![Alt text](https://github.com/XuanZhouGit/Redis/blob/master/redis_rdb.PNG)
 
-
+save和bgsave实际上都是调用rdbSave来生成快照文件, 但是save操作是在主进程进行的,也就是save会阻塞主进程, 而
