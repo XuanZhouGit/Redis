@@ -345,6 +345,7 @@ int rewriteAppendOnlyFileBackground(void) {
     return C_OK; /* unreached */
 }
 ```
+![Alt text](https://github.com/XuanZhouGit/Redis/blob/master/BGREWRITEAOF.PNG)
 
 ### 2.2 RDB
 
