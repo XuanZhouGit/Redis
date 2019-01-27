@@ -101,6 +101,8 @@ header | e1 | e2 | e3 | e4 | ... | zlend
 ## 2 持久存储
 Redis之所以性能好,读写速度快,是因为它的所有操作都基于内存,但内存的数据如果进程崩溃或系统重启就会丢失,所以数据持久化对于内存数据库很重要,它保证了数据库的可靠性, Redis提供了两种持久化方案,AOF及RDB(4.0开始支持AOF-RDB混合)
 ### 2.1 AOF(Append-only file)
+
+#### 2.1.1 AOF流程
 AOF实际上是一份执行日志,所有redis修改相关的命令追加到AOF文件中,通过回放这些命令就能恢复数据库,更新AOF文件的流程如图:
 
 ![Alt text](https://github.com/XuanZhouGit/Redis/blob/master/redis_aof.PNG)
@@ -277,6 +279,72 @@ void flushAppendOnlyFile(int force) {
     }
 }
 ```
+#### 3.1.2 bgrewriteaof命令
+
+bgrewriteaof命令用于执行AOF文件重写,用于创建一个当前AOF文件的体积优化版本,这个操作由子进程异步进行,不会阻塞主进程,且新的AOF会先写入到一个临时文件中,所以bgrewriteaof操作失败不会有数据丢失
+
+
+```
+int rewriteAppendOnlyFileBackground(void) {
+    pid_t childpid;
+    long long start;
+
+    if (server.aof_child_pid != -1 || server.rdb_child_pid != -1) return C_ERR;
+    if (aofCreatePipes() != C_OK) return C_ERR;
+    openChildInfoPipe();
+    start = ustime();
+    if ((childpid = fork()) == 0) {
+        char tmpfile[256];
+
+        /* Child */
+        closeListeningSockets(0);
+        redisSetProcTitle("redis-aof-rewrite");
+        snprintf(tmpfile,256,"temp-rewriteaof-bg-%d.aof", (int) getpid());
+        if (rewriteAppendOnlyFile(tmpfile) == C_OK) {
+            size_t private_dirty = zmalloc_get_private_dirty(-1);
+
+            if (private_dirty) {
+                serverLog(LL_NOTICE,
+                    "AOF rewrite: %zu MB of memory used by copy-on-write",
+                    private_dirty/(1024*1024));
+            }
+
+            server.child_info_data.cow_size = private_dirty;
+            sendChildInfo(CHILD_INFO_TYPE_AOF);
+            exitFromChild(0);
+        } else {
+            exitFromChild(1);
+        }
+    } else {
+        /* Parent */
+        server.stat_fork_time = ustime()-start;
+        server.stat_fork_rate = (double) zmalloc_used_memory() * 1000000 / server.stat_fork_time / (1024*1024*1024); /* GB per second. */
+        latencyAddSampleIfNeeded("fork",server.stat_fork_time/1000);
+        if (childpid == -1) {
+            closeChildInfoPipe();
+            serverLog(LL_WARNING,
+                "Can't rewrite append only file in background: fork: %s",
+                strerror(errno));
+            aofClosePipes();
+            return C_ERR;
+        }
+        serverLog(LL_NOTICE,
+            "Background append only file rewriting started by pid %d",childpid);
+        server.aof_rewrite_scheduled = 0;
+        server.aof_rewrite_time_start = time(NULL);
+        server.aof_child_pid = childpid;
+        updateDictResizePolicy();
+        /* We set appendseldb to -1 in order to force the next call to the
+         * feedAppendOnlyFile() to issue a SELECT command, so the differences
+         * accumulated by the parent into server.aof_rewrite_buf will start
+         * with a SELECT statement and it will be safe to merge. */
+        server.aof_selected_db = -1;
+        replicationScriptCacheFlush();
+        return C_OK;
+    }
+    return C_OK; /* unreached */
+}
+```
 
 ### 2.2 RDB
 
@@ -340,5 +408,4 @@ int rdbSaveBackground(char *filename, rdbSaveInfo *rsi) {
 }
 ```
 
-### 2.3 
 ## 3 cluster
