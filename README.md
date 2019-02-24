@@ -414,12 +414,19 @@ int rdbSaveBackground(char *filename, rdbSaveInfo *rsi) {
 ### 3.1 redis主流集群
 redis集群目前有几种实现方式:
 1. 客户端分片, jedis支持的,使用一致性hash
+
 ![Alt text](https://github.com/XuanZhouGit/Redis/blob/master/redis_sharding.PNG)
+
 2. 基于代理的分片, Codis和Twemproxy
+
 ![Alt text](https://github.com/XuanZhouGit/Redis/blob/master/redis_proxy.PNG)
+
 3. 路由查询, redis cluster(3.0版本开始支持)
+
 ![Alt text](https://github.com/XuanZhouGit/Redis/blob/master/redis_cluster.PNG)
+
 这些实现方式有这些不同:
+
  - | Codis | Twemproxy | Redis Cluster
  sharding way | | consistency hash | slot
  resharding | N | Y | N | Y
