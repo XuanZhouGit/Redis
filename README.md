@@ -437,3 +437,4 @@ redis集群目前有几种实现方式:
  client | any | any | smart client
  friendly to maintain | Y | N | N
  
+### 3.2 slot
