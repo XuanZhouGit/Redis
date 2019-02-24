@@ -428,6 +428,7 @@ redis集群目前有几种实现方式:
 这些实现方式有这些不同:
 
  - | Codis | Twemproxy | Redis Cluster
+ - | :---: | :-------: | :-----------:
  sharding way | | consistency hash | slot
  resharding | N | Y | N | Y
  Pipeline | Y | Y | Y(只支持对单个node mset、mget、pipeline)
