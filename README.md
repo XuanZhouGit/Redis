@@ -437,7 +437,7 @@ redis集群目前有几种实现方式:
  client | any | any | smart client
  friendly to maintain | Y | N | N
  
-### 3. 数据分片
+### 3.2 数据分片
 Redis cluster使用hash slot进行数据分片, 一个cluster有16384个hash slots, 所有的key都会被映射到某个slot上, 计算key对应的slot的函数为:
 ```
 /* We have 16384 hash slots. The hash slot of a given key is obtained
@@ -540,3 +540,8 @@ typedef struct clusterState {
                                        excluding nodes without address. */
 } clusterState;
 ```
+当集群添加或删除节点时,只需要移动相应的slot就行了, 比如:
+当添加一个新节点N + 1, 只需要从0...N节点中移动一些slots给N+1
+当删除一个节点 N, 只需要将节点N的slots移动到0...N - 1,再删除slot N
+
+### 3.3 主从复制
