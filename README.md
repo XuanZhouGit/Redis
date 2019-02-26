@@ -544,4 +544,4 @@ typedef struct clusterState {
 当添加一个新节点N + 1, 只需要从0...N节点中移动一些slots给N+1
 当删除一个节点 N, 只需要将节点N的slots移动到0...N - 1,再删除slot N
 
-### 3.3 主从复制
+### 3.3 
