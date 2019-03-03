@@ -546,8 +546,11 @@ typedef struct clusterState {
 
 ### 3.3 握手
 Redis cluster一般由多个节点组成,这些节点开始是相互独立的,需要将这些节点连接起来, 组成集群, 向某个node发送:
+
 ```CLUSTER MEET <ip> <port> [cport]```
+
 node就会与指定ip, port的节点进行握手,握手成功,这个ip,port的节点就加入node所在的集群,过程如图:
+
 ![Alt text](https://github.com/XuanZhouGit/Redis/blob/master/handshake.PNG)
 
 
