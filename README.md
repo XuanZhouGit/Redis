@@ -544,4 +544,11 @@ typedef struct clusterState {
 当添加一个新节点N + 1, 只需要从0...N节点中移动一些slots给N+1
 当删除一个节点 N, 只需要将节点N的slots移动到0...N - 1,再删除slot N
 
-### 3.3 
+### 3.3 握手
+Redis cluster一般由多个节点组成,这些节点开始是相互独立的,需要将这些节点连接起来, 组成集群, 向某个node发送:
+```CLUSTER MEET <ip> <port> [cport]```
+node就会与指定ip, port的节点进行握手,握手成功,这个ip,port的节点就加入node所在的集群:
+
+
+
+
