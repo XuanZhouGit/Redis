@@ -544,7 +544,7 @@ typedef struct clusterState {
 当添加一个新节点N + 1, 只需要从0...N节点中移动一些slots给N+1
 当删除一个节点 N, 只需要将节点N的slots移动到0...N - 1,再删除slot N
 
-### 3.3 握手
+### 3.3 handshake
 Redis cluster一般由多个节点组成,这些节点开始是相互独立的,需要将这些节点连接起来, 组成集群, 向某个node发送:
 
 ```CLUSTER MEET <ip> <port> [cport]```
@@ -559,5 +559,9 @@ node就会与指定ip, port的节点进行握手,握手成功,这个ip,port的�
 
 (3) 在node1的clusterCron里会遍历所有的cluster node, 向CLUSTER_NODE_HANDSHAKE状态的node发送CLUSTERMSG_TYPE_MEET,并将node的clusterReadHandler加入事件循环
 
-(4) node2接收到CLUSTERMSG_TYPE_MEET,会向node1返回CLUSTERMSG_TYPE_PONG,这样node2就加入了node所在的集群
+(4) node2接收到CLUSTERMSG_TYPE_MEET,会向node1返回CLUSTERMSG_TYPE_PONG,node2就加入了node1所在的集群,而node2的信息是通过msg中的gossip fileds进行传播的
+
+### 3.4 failover
+### 3.5 clusterCron
+
 
