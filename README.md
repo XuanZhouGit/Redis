@@ -553,5 +553,8 @@ node就会与指定ip, port的节点进行握手,握手成功,这个ip,port的�
 
 ![Alt text](https://github.com/XuanZhouGit/Redis/blob/master/handshake.PNG)
 
-
+(1) client向node1发送CLUSTER MEET,将node2的ip, port发给node1
+(2) node1会使用,ip,port创建一个cluster node,加到自己的clusternodes里,并标记状态为CLUSTER_NODE_HANDSHAKE, ,并向client发送ok message
+(3) 在node1的clusterCron里会遍历所有的cluster node, 向CLUSTER_NODE_HANDSHAKE状态的node发送CLUSTERMSG_TYPE_MEET,并将node的clusterReadHandler加入事件循环
+(4) node2接收到CLUSTERMSG_TYPE_MEET,会向node1返回CLUSTERMSG_TYPE_PONG,这样node2就加入了node所在的集群
 
