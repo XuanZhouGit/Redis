@@ -430,7 +430,7 @@ redis集群目前有几种实现方式:
  cluster | Codis | Twemproxy | Redis Cluster
  :-----: | :---: | :-------: | :-----------:
  数据分片 | | consistency hash | hash slot
- resharding | N | Y | N | Y
+ resharding | Y | N | Y
  Pipeline | Y | Y | Y(只支持对单个node mset、mget、pipeline)
  multi-key when resharding | Y | | N
  hashtag for multi-key | Y | Y | Y
@@ -561,7 +561,52 @@ node就会与指定ip, port的节点进行握手,握手成功,这个ip,port的�
 
 (4) node2接收到CLUSTERMSG_TYPE_MEET,会向node1返回CLUSTERMSG_TYPE_PONG,node2就加入了node1所在的集群,而node2的信息是通过msg中的gossip fileds进行传播的
 
-### 3.4 failover
-### 3.5 clusterCron
+### 3.4 clusterCron
+每个redis节点每100ms会clusterCron执行这些操作:
+(1) 向未建立TCP连接的节点发送ping或meet(handshake中的步骤(3))
+(2) keepalive: 
+ (2.1) 每秒钟随机从已经建立连接的5个节点中选1个pong_received最久的节点发送ping
+ (2.2) 对等待pong时间超过timeout/2的节点断开tcp连接,将通过步骤(1)进行重连
+ (2.3) 对已经接受pong超过timeout/2但没有发送ping的节点发送ping
+(3) 如果这个节点是slave节点, 且其master有最多的non failing slave节点,就尝试将这个slave移给cluster中的孤儿master(clusterHandleSlaveMigration):
+```
+/* -----------------------------------------------------------------------------
+ * CLUSTER slave migration
+ *
+ * Slave migration is the process that allows a slave of a master that is
+ * already covered by at least another slave, to "migrate" to a master that
+ * is orpaned, that is, left with no working slaves.
+ * ------------------------------------------------------------------------- */
 
+/* This function is responsible to decide if this replica should be migrated
+ * to a different (orphaned) master. It is called by the clusterCron() function
+ * only if:
+ *
+ * 1) We are a slave node.
+ * 2) It was detected that there is at least one orphaned master in
+ *    the cluster.
+ * 3) We are a slave of one of the masters with the greatest number of
+ *    slaves.
+ *
+ * This checks are performed by the caller since it requires to iterate
+ * the nodes anyway, so we spend time into clusterHandleSlaveMigration()
+ * if definitely needed.
+ *
+ * The fuction is called with a pre-computed max_slaves, that is the max
+ * number of working (not in FAIL state) slaves for a single master.
+ *
+ * Additional conditions for migration are examined inside the function.
+ */
+void clusterHandleSlaveMigration(int max_slaves)
+```
+(4) 如果本节点是master节点,向自己执行failover的slave节点发送ping,更新flag
+(5) 将超时未收到pong的节点设置为CLUSTER_NODE_PFAIL
+(6) 如果本节点是slave节点,但没开始从master进行复制,更新master信息并设置复制信息
+(7) 检查manual failover是不是已经超时,如果已经超时,重置manual failover(3.4会详细介绍failover)
+(8) slave节点在必要的时候处理failover(3.4会详细介绍failover)
+(9) 更新节点状态
+
+### 3.4 failover
+
+redis cluster能自动进行failover
 
