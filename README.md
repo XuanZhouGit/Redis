@@ -620,9 +620,15 @@ void clusterHandleSlaveMigration(int max_slaves)
 (9) 更新节点状态
 
 ### 3.4 failover
+#### 3.4.2 slave failover
+
 #### 3.4.1 manual failover
-manual failover是一种运维功能,由client通过CLUSTER FAILOVER command手动将slave设置为master节点
+manual failover是一种运维功能,由client通过CLUSTER FAILOVER command手动将slave设置为master节点:
+```
+CLUSTER FAILOVER [FORCE|TAKEOVER]
+```
+force:忽略主备同步,设置mf_can_start = 1 
+takeover:忽略主备同步, 忽略master投票阶段的
 
 
-redis cluster能自动进行failover
 
