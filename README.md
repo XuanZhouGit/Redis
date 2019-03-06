@@ -620,9 +620,15 @@ void clusterHandleSlaveMigration(int max_slaves)
 (9) 更新节点状态
 
 ### 3.4 failover
-#### 3.4.2 slave failover
+#### 3.4.1 slave failover
+##### 3.4.1.1 gossip field
+gossip filed是节点通信的重要部分,主要用于消息广播及更新, gossip主要包含两种消息:
+(1) node连接的随机10%的节点,收到的节点如果发现没有连接这些节点,就会与这些节点进行handshake,这样新加入的节点能快速的连接集群中其它节点
+(2) 被标记了CLUSTER_NODE_PFAIL的节点, 收到的节点会统计这个节点被多少其它节点标记成了CLUSTER_NODE_PFAIL,当数目超过(server.cluster->size / 2) + 1,这个这点会被标记为CLUSTER_NODE_FAIL, 如果收到的节点是master节点,它会向整个集群广播这个节点的CLUSTERMSG_TYPE_FAIL信息, 让集群中所有节点把这个节点标记为CLUSTER_NODE_FAIL
 
-#### 3.4.1 manual failover
+##### 3.4.1.2 执行流程
+
+#### 3.4.2 manual failover
 manual failover是一种运维功能,由client通过CLUSTER FAILOVER command手动将slave设置为master节点:
 ```
 CLUSTER FAILOVER [FORCE|TAKEOVER]
