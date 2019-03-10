@@ -623,16 +623,24 @@ void clusterHandleSlaveMigration(int max_slaves)
 #### 3.4.1 slave failover
 ##### 3.4.1.1 gossip field
 gossip filed是节点通信的重要部分,主要用于消息广播及更新, gossip主要包含两种消息:
+
 (1) node连接的随机10%的节点,收到的节点如果发现没有连接这些节点,就会与这些节点进行handshake,这样新加入的节点能快速的连接集群中其它节点
+
 (2) 被标记了CLUSTER_NODE_PFAIL的节点, 收到的节点会统计这个节点被多少其它节点标记成了CLUSTER_NODE_PFAIL,当数目超过(server.cluster->size / 2) + 1,这个这点会被标记为CLUSTER_NODE_FAIL, 如果收到的节点是master节点,它会向整个集群广播这个节点的CLUSTERMSG_TYPE_FAIL信息, 让集群中所有节点把这个节点标记为CLUSTER_NODE_FAIL
 
 ##### 3.4.1.2 failover flow
-当slave node发现其master node的状态为CLUSTER_NODE_FAIL,就会进行failover,希望成为新的master, failover会通过一次选举过程,让集群中其它master选出新的master,这个工程为:
+当slave node发现其master node的状态为CLUSTER_NODE_FAIL,就会进行failover,希望成为新的master, failover会通过一次选举过程,让集群中其它master选出新的master:
+
 (1) slave发现其master状态为为CLUSTER_NODE_FAIL
+
 (2) slave会根据自己的offset在slave中的data offset延迟+随机时间做为failover_auth_time开始发起选举,这样数据较新的slave更可能成为新master,减少数据丢失
+
 (3) 到了failover_auth_time, slave会将server.cluster->currentEpoch++, 并向集群广播CLUSTERMSG_TYPE_FAILOVER_AUTH_REQUEST
+
 (4) 当集群中的其它master接到CLUSTERMSG_TYPE_FAILOVER_AUTH_REQUEST, 会检测请求中的configEpoch(也就是failover的master的Epoch)是不是比master服务的slots的configEpoch更新, 及currentEpoch是不是比当前的server.cluster->currentEpoch更新(master只接受更新的请求),且该master没有对currentEpoch进行过投票, master会向请求的slave发送CLUSTERMSG_TYPE_FAILOVER_AUTH_ACK
+
 (5) 当slave收到了超过半数的CLUSTERMSG_TYPE_FAILOVER_AUTH_ACK, slave会成为新的master
+
 (6) 新的master更新相关信息, 并向集群广播更新
 
 slave handle flow:
@@ -928,10 +936,13 @@ void clusterSendFailoverAuthIfNeeded(clusterNode *node, clusterMsg *request) {
 
 #### 3.4.2 manual failover
 manual failover是一种运维功能,由client通过CLUSTER FAILOVER command手动将slave设置为master节点:
+
 ```
 CLUSTER FAILOVER [FORCE|TAKEOVER]
 ```
+
 force:设置mf_can_start = 1, 跳过3.4.1.2(1)(2), 执行(3) ~ (6)
+
 takeover:跳过3.4.1.2(1) ~ (5),执行(6)
 
 
