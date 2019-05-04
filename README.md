@@ -429,9 +429,9 @@ redis集群目前有几种实现方式:
 
  cluster | Codis | Twemproxy | Redis Cluster
  :-----: | :---: | :-------: | :-----------:
- 数据分片 | | consistency hash | hash slot
+ sharding | | consistency hash | hash slot
  resharding | Y | N | Y
- Pipeline | Y | Y | Y(只支持对单个node mset、mget、pipeline)
+ Pipeline | Y | Y | Y(only support single node mset、mget、pipeline)
  multi-key when resharding | Y | | N
  hashtag for multi-key | Y | Y | Y
  client | any | any | smart client
